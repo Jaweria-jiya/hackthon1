@@ -200,9 +200,9 @@ def get_openai_client() -> Optional[openai.OpenAI]:
 
 # Your `backend/.env` file should look like this (ensure no extra spaces/lines):
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+# OPENAI_API_KEY=
 # QDRANT_URL=https://6af31d6d-62e2-4604-bf23-af89de37d205.us-east4-0.gcp.cloud.qdrant.io:6333
-# QDRANT_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.KexYCDK3CMZUgWth3qM0KGFulehOgS3H8pnFbUo9hbw
+# QDRANT_API_KEY=
 # QDRANT_COLLECTION_NAME=physical_ai_book
 # DATABASE_URL="your_database_url_here" # Ensure all other Pydantic fields in app/core/config.py are also present and valid
 # SECRET_KEY="your_secret_key_here"
