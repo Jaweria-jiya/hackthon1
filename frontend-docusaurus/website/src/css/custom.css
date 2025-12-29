@@ -1,0 +1,101 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Custom styles for Sign In/Sign Up links in navbar */
+.navbar-signin-link,
+.navbar-signup-link {
+  /* Remove button-like styling */
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  
+  /* Inherit text color from navbar items, or set explicitly */
+  color: var(--ifm-navbar-link-color) !important;
+  
+  /* Ensure proper spacing */
+  padding: var(--ifm-navbar-item-padding-vertical) var(--ifm-navbar-item-padding-horizontal) !important;
+  margin-left: 0.5rem; /* Space between links and other right-aligned items */
+  
+  /* Subtle hover effect */
+  text-decoration: none !important; /* Ensure no default underline */
+}
+
+.navbar-signin-link:hover,
+.navbar-signup-link:hover {
+  color: var(--ifm-navbar-link-hover-color) !important;
+  text-decoration: underline !important;
+}
+
+/* Adjustments for mobile view if needed, though default Docusaurus navbar responsiveness is usually good */
+@media screen and (max-width: 996px) {
+  .navbar-signin-link,
+  .navbar-signup-link {
+    margin-left: 0; /* Remove horizontal margin on mobile dropdown */
+    padding: 0.25rem 0; /* Adjust vertical padding */
+    text-align: left; /* Align text to left in dropdown */
+  }
+}
+
+/* Hide left-side duplicate Sign In/Sign Up buttons/links */
+.navbar__items:not(.navbar__items--right) .navbar__item[href="/signin"],
+.navbar__items:not(.navbar__items--right) .navbar__item[href="/signup"] {
+  display: none !important;
+}
+
+/* UserProfile CSS */
+.profile-avatar-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.profile-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+}

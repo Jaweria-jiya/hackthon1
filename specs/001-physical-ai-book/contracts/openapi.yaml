@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: Physical AI & Humanoid Robotics Book API
+  version: 1.0.0
+paths:
+  /api/rag/query:
+    post:
+      summary: Query the RAG chatbot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query_text:
+                  type: string
+      responses:
+        '200':
+          description: A successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response_text:
+                    type: string
+                  citations:
+                    type: array
+                    items:
+                      type: string
+  /api/translate:
+    post:
+      summary: Translate a chapter to Urdu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chapter_id:
+                  type: string
+      responses:
+        '200':
+          description: A successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  translated_content:
+                    type: string

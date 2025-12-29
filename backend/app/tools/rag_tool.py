@@ -1,91 +1,145 @@
-import os
-from typing import List, Dict, Any
-from qdrant_client import QdrantClient, models
-from qdrant_client.http.exceptions import UnexpectedResponse
-from openai import AuthenticationError, APIError
-from pydantic import Field, BaseModel
+import logging
+import re
+from qdrant_client import QdrantClient
+import httpx
 
-from app.core.config import gemini_client, settings # Import settings
+from app.core.config import settings
+from app.core.openai import openai_client, OPENAI_CLIENT_ENABLED
 
-# Remove redundant load_dotenv() as it's handled in app.core.config
-# QDRANT_HOST = os.getenv("QDRANT_HOST")
-# QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "physical_ai_book") # Still allow override for collection name
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Remove redundant check, now handled in app.core.config
-# if not QDRANT_HOST:
-#     raise ValueError("QDRANT_HOST environment variable not set.")
+class RetrievalError(Exception):
+    """Custom exception for errors during Qdrant retrieval."""
+    pass
 
-qdrant_client = QdrantClient(
-    host=settings.QDRANT_HOST,
-    port=settings.QDRANT_PORT,
-    api_key=settings.QDRANT_API_KEY,
-) # Use settings object
+# --- Configuration ---
+EMBEDDING_MODEL = 'text-embedding-3-large'
+EXPECTED_DIMENSION = 3072
+SIMILARITY_THRESHOLD = 0.5
 
-def retrieve_from_book(query: str, limit: int = 5) -> List[Dict[str, Any]]:
-    """
-    Retrieves relevant document chunks from the 'Physical AI & Humanoid Robotics Book' based on a user query.
-    """
+# --- Global Variables ---
+qdrant_client = None
+# embedding_model = None # No longer initialized here; OpenAI client handles embeddings
+RAG_ENABLED = False
+
+# --- Initialization Logic ---
+logger.info("Attempting to initialize Qdrant client and prepare for OpenAI embeddings...")
+if settings.QDRANT_URL and settings.QDRANT_COLLECTION_NAME and settings.QDRANT_API_KEY:
     try:
-        embedding_response = gemini_client.embeddings.create(
-            model="embedding-001",
-            input=query,
-        )
-        query_vector = embedding_response.data[0].embedding
-    except AuthenticationError as e:
-        raise ValueError(f"Gemini API Authentication Error for embeddings: {e}")
-    except APIError as e:
-        raise RuntimeError(f"Gemini API Error for embeddings: {e}")
+        logger.info("OpenAI client will handle embeddings.")
+
+        logger.info(f"Connecting to Qdrant at {settings.QDRANT_URL}...")
+        qdrant_client = QdrantClient(url=settings.QDRANT_URL, api_key=settings.QDRANT_API_KEY, timeout=20)
+        
+        logger.info("Performing Qdrant health check...")
+        qdrant_client.get_collections() 
+        logger.info("✅ Successfully connected to Qdrant and passed health check.")
+
+        try:
+            logger.info(f"Checking for collection '{settings.QDRANT_COLLECTION_NAME}'...")
+            collection_info = qdrant_client.get_collection(collection_name=settings.QDRANT_COLLECTION_NAME)
+            
+            if collection_info.status == 'green' and collection_info.points_count > 0:
+                logger.info(f"Collection '{settings.QDRANT_COLLECTION_NAME}' loaded with {collection_info.points_count} points. RAG is ENABLED.")    
+                RAG_ENABLED = True
+            elif collection_info.status == 'green' and collection_info.points_count == 0:
+                logger.warning(f"Collection '{settings.QDRANT_COLLECTION_NAME}' is empty. RAG is DISABLED.")
+            else:
+                logger.warning(f"Collection '{settings.QDRANT_COLLECTION_NAME}' has status '{collection_info.status}'. RAG is DISABLED.")
+
+        except Exception as e:
+            logger.error(f"⚠️ Error checking Qdrant collection '{settings.QDRANT_COLLECTION_NAME}': {e}. RAG is DISABLED.", exc_info=True)       
+            RAG_ENABLED = False
+
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 403:
+            logger.error(f"❌ Qdrant connection failed with 403 Forbidden. Check QDRANT_API_KEY permissions. RAG will be DISABLED.", exc_info=True)
+        else:
+            logger.error(f"❌ Qdrant connection failed with HTTP status {e.response.status_code}: {e}. RAG will be DISABLED.", exc_info=True)
+        qdrant_client = None
+        RAG_ENABLED = False
     except Exception as e:
-        raise RuntimeError(f"Failed to generate embedding for query using Gemini API: {e}")
+        logger.error(f"❌ Qdrant initialization failed: {e}. RAG is DISABLED.", exc_info=True)
+        qdrant_client = None
+        RAG_ENABLED = False
+else:
+    logger.warning("⚠️ QDRANT_URL, QDRANT_API_KEY, or QDRANT_COLLECTION_NAME not fully set. RAG is DISABLED.")
+
+if RAG_ENABLED:
+    logger.info("✅ RAG tool is initialized and ready.")
+else:
+    logger.info("ℹ️ RAG tool is disabled.")
+
+
+def _normalize_query(query: str) -> str:
+    """
+    Cleans and normalizes a query by removing common prefixes and special characters.
+    """
+    normalized_query = re.sub(r'^(chapter|section|sec\.|part|p\.)?\s*[\d\.]+\s*', '', query.strip(), flags=re.IGNORECASE)
+    normalized_query = normalized_query.rstrip('?').strip()
+    return normalized_query
+
+
+async def retrieve_from_book(query: str, top_k: int = 5) -> str:
+    """
+    Retrieves context from Qdrant by explicitly generating embeddings with FastEmbed
+    and using the qdrant_client.query_points() method.
+    """
+    if not RAG_ENABLED or not qdrant_client: # embedding_model is no longer needed in this check
+        logger.warning("RAG is disabled or not configured. Skipping retrieval.")
+        return ""
 
     try:
-        search_result = qdrant_client.search(
-            collection_name=QDRANT_COLLECTION_NAME,
-            query_vector=query_vector,
-            limit=limit,
-            score_threshold=0.7
+        original_query = query
+        normalized_query = _normalize_query(original_query)
+        logger.info(f"Original query: '{original_query}', Normalized query: '{normalized_query}'")
+
+        # Generate embedding explicitly with OpenAI
+        logger.info("Generating embedding with OpenAI...")
+        if not OPENAI_CLIENT_ENABLED:
+            raise RetrievalError("OpenAI client is not enabled for embedding generation.")
+        
+        response = await openai_client.embeddings.create(input=[normalized_query], model=EMBEDDING_MODEL)
+        query_embedding = response.data[0].embedding
+        logger.info("✅ Embedding generated successfully.")
+        
+        logger.info(f"Searching collection '{settings.QDRANT_COLLECTION_NAME}' with top_k={top_k}")
+
+        retrieved_points = qdrant_client.query_points(
+            collection_name=settings.QDRANT_COLLECTION_NAME,
+            query=query_embedding, # Pass the vector as a list of floats directly from OpenAI response
+            limit=top_k,
+            with_payload=True
         )
-    except UnexpectedResponse as e:
-        raise RuntimeError(f"Qdrant client error during search: {e}")
+        logger.info(f"Qdrant query_points returned {len(retrieved_points.points)} points.")
+
+        if not retrieved_points.points:
+            logger.warning("No matching documents found in Qdrant. Final decision: No context.")
+            return ""
+
+        # Log scores for debugging
+        scores = [hit.score for hit in retrieved_points.points]
+        logger.info(f"Retrieved point scores: {scores}")
+
+        # Basic thresholding to relax retrieval
+        if max(scores) < SIMILARITY_THRESHOLD:
+            logger.warning(f"Max similarity score {max(scores)} is below threshold {SIMILARITY_THRESHOLD}. Considering this a weak match, but proceeding.")
+            # Even if it's a weak match, we proceed as per the "Relaxed Threshold" requirement
+        
+        context = ""
+        retrieved_ids = [hit.id for hit in retrieved_points.points]
+        logger.info(f"Retrieved point IDs: {retrieved_ids}")
+
+        for hit in retrieved_points.points: 
+            if hit.payload and 'content' in hit.payload:
+                context += hit.payload['content'] + "\n\n"
+                logger.debug(f"Retrieved chunk ID: {hit.id}, score: {hit.score}, text: {hit.payload['content'][:100]}...")
+        
+        final_decision = f"Retrieved {len(retrieved_points.points)} documents from Qdrant successfully."
+        logger.info(f"✅ Final retrieval decision: {final_decision}")
+        return context.strip()
+
     except Exception as e:
-        raise RuntimeError(f"Failed to retrieve from Qdrant: {e}")
-
-    results = []
-    for hit in search_result:
-        payload = hit.payload
-        results.append(
-            {
-                "content": payload.get("content", ""),
-                "source": payload.get("source", "unknown"),
-                "chunk_id": payload.get("chunk_id", "unknown"),
-                "score": hit.score
-            }
-        )
-    return results
-
-rag_retrieval_tool_def = {
-    "type": "function",
-    "function": {
-        "name": "retrieve_from_book",
-        "description": "Retrieves relevant document chunks from the 'Physical AI & Humanoid Robotics Book' based on a user query.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "The user's query for retrieving relevant information from the book."
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "Number of relevant chunks to retrieve."
-                }
-            },
-            "required": ["query"]
-        }
-    }
-}
-
-available_tools = {
-    "retrieve_from_book": retrieve_from_book,
-}
+        logger.error(f"ERROR: Qdrant retrieval failed during query for query '{query}': {e}", exc_info=True)
+        raise RetrievalError(f"Qdrant retrieval failed: {e}") from e

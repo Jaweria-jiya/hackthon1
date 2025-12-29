@@ -1,0 +1,30 @@
+# Node.js
+node_modules/
+dist/
+build/
+*.log
+.env*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+frontend-docusaurus/website/build/
+frontend-docusaurus/website/.docusaurus/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+*.egg-info/
+*.prof
+*.prof*
+backend/.pytest_cache/
+
+# Universal
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/

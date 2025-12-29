@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+openai
+qdrant-client>=1.7.0,<2.0.0
+sentence-transformers
+torch
+torchvision
+torchaudio
+psycopg2-binary
+alembic
+sqlalchemy
+pydantic-settings
+requests
+fastembed

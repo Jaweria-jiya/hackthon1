@@ -1,0 +1,23 @@
+.docItemContainer header + *,
+.docItemContainer article > *:first-child {
+  margin-top: 0;
+}
+
+/* Style for the container wrapping breadcrumbs and translate button */
+.docBreadcrumbsAndTranslate {
+  display: flex;
+  align-items: center; /* Vertically align items */
+  flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+  justify-content: space-between; /* Push button to the right if space allows */
+}
+
+/* Adjustments for breadcrumbs to not take full width if button is present */
+.docBreadcrumbsAndTranslate :global(.theme-doc-breadcrumbs) {
+  flex-grow: 1; /* Allow breadcrumbs to take available space */
+}
+
+@media (min-width: 997px) {
+  .docItemCol {
+    max-width: 75% !important;
+  }
+}

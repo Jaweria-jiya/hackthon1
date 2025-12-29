@@ -1,0 +1,87 @@
+.signupContainer {
+    max-width: 500px;
+    margin: 3rem auto;
+    padding: 2rem;
+    border: 1px solid var(--ifm-color-emphasis-300);
+    border-radius: var(--ifm-border-radius);
+    background-color: var(--ifm-background-color);
+    box-shadow: var(--ifm-global-shadow-md);
+}
+
+.signupContainer h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--ifm-color-primary);
+}
+
+.signupForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.formGroup label {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: var(--ifm-font-color-base);
+}
+
+.inputField,
+.selectField {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--ifm-color-emphasis-400);
+    border-radius: var(--ifm-border-radius);
+    font-size: 1rem;
+    color: var(--ifm-font-color-base);
+    background-color: var(--ifm-background-color);
+}
+
+.inputField:focus,
+.selectField:focus {
+    border-color: var(--ifm-color-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--ifm-color-primary-rgb), 0.2);
+}
+
+.submitButton {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--ifm-color-primary);
+    color: var(--ifm-color-white);
+    border: none;
+    border-radius: var(--ifm-border-radius);
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.submitButton:hover:not(:disabled) {
+    background-color: var(--ifm-color-primary-dark);
+}
+
+.submitButton:disabled {
+    background-color: var(--ifm-color-emphasis-500);
+    cursor: not-allowed;
+}
+
+.error {
+    color: var(--ifm-color-danger);
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.oauthOptions {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.oauthOptions button {
+    margin: 0.5rem;
+}

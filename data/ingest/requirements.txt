@@ -1,0 +1,5 @@
+langchain-text-splitters
+langchain-openai
+qdrant-client
+pymupdf
+python-dotenv

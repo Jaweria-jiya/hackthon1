@@ -1,0 +1,172 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+/* Main page container for fullscreen background and flex layout */
+.fullPageWrapper {
+  display: flex;
+  flex-direction: column; /* Content stacks vertically */
+  min-height: 100vh; /* Full viewport height */
+  width: 100vw; /* Full viewport width */
+  /* background-color: #3b3a3a; */ /* Exact background color #3b3a3a */ /* Removed as image will take over */
+  background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://www.shutterstock.com/image-vector/artificial-intelligence-digital-education-visualized-600nw-2653874705.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: white;
+  text-align: center;
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
+}
+
+/* Area for main heading and CTA - centered vertically within its available space */
+.mainContentArea {
+  flex-grow: 1; /* Takes available space to push WeeklyLearningProgram down */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center vertically */
+  align-items: center; /* Center horizontally */
+  padding: 2rem; /* Add some padding */
+}
+
+.mainHeading {
+  color: white;
+  font-size: 4rem; /* Large, prominent */
+  font-weight: bold;
+  margin-bottom: 1rem;
+  /* Responsive font size */
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+  }
+}
+
+.subHeading {
+  color: #3fb950; /* Green */
+  font-size: 1.5rem; /* Medium */
+  margin-bottom: 2rem;
+  font-weight: normal; /* Ensure it's not bold by default if Heading applies it */
+}
+
+.startReadingLink {
+  color: #3fb950; /* Green color */
+  font-size: 1.25rem;
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  border-bottom: 2px solid transparent; /* For underline effect on hover */
+}
+
+.startReadingLink:hover {
+  color: #2e854c; /* Darker green accent on hover */
+  text-decoration: none;
+  border-color: #2e854c; /* Underline effect */
+}
+
+/* WeeklyLearningProgram Section Styles - keep as-is for background and block styling */
+.learningProgramSection {
+  background-color: #3b3a3a; /* Dark green tone */
+  color: white;
+  padding: 4rem 0;
+  text-align: center;
+  width: 100%;
+}
+
+.learningProgramTitle {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 3rem;
+}
+
+.learningBlocksContainer {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.learningBlock {
+  background-color: #359962; /* Slightly lighter green for blocks */
+  padding: 1.5rem;
+  border-radius: 8px;
+  flex: 1;
+  min-width: 250px;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.learningBlock:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.learningBlock h3 {
+  color: white;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.learningBlock p {
+  color: #e0e0e0;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+}
+
+.roadmapLink {
+  color: #c8e6c9; /* Lighter green for link */
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease-in-out;
+  margin-top: auto;
+}
+
+.roadmapLink:hover {
+  color: #a5d6a7; /* Even lighter green on hover */
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .learningProgramTitle {
+    font-size: 2rem;
+  }
+  .learningBlocksContainer {
+    flex-direction: column;
+    align-items: center;
+  }
+  .learningBlock {
+    max-width: 90%;
+  }
+}
+
+/* Reset default margins/paddings for the entire page to ensure fullscreen */
+html, body, #__docusaurus {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
+}
+/* Ensure the root div takes up full height */
+#__docusaurus {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hide default Docusaurus elements */
+.navbar, .footer, .heroBanner, .mainWrapper, .container { /* Added .mainWrapper, .container to ensure all are hidden */
+  display: none !important; /* Use !important to override Docusaurus defaults */
+}
