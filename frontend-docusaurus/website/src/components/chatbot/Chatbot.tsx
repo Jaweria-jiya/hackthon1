@@ -24,7 +24,7 @@ const Chatbot = () => {
         e.preventDefault();
         if (inputValue.trim() === '' || isLoading) return;
 
-        const currentInput = inputValue; // User ka message save kar liya
+        const currentInput = inputValue; 
         const userMessage = { id: Date.now(), text: currentInput, sender: 'user' };
         
         setMessages(prevMessages => [...prevMessages, userMessage]);
@@ -32,24 +32,26 @@ const Chatbot = () => {
         setIsLoading(true);
 
         try {
-            // ✅ Fix 1: Direct Production URL use kiya (Hugging Face)
-            // Aap Vercel settings mein NEXT_PUBLIC_API_BASE_URL ko ye URL bhi de sakte hain
             const backendURL = "https://jaw-eria-deploy-backend.hf.space";
 
-            // ✅ Fix 2: 'query_text' ko badal kar 'query' kar diya (Backend yahi mang raha hai)
+            // ✅ YAHAN MISTAKE THI: Hum isse 'query_text' bhej rahe hain 
+            // Taake FastAPI ka Pydantic model isse accept kar sake
             const res = await fetch(`${backendURL}/api/rag/query`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query: currentInput }), 
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({ query_text: currentInput }), 
             });
 
             if (!res.ok) {
+                // Agar 422 error phir bhi aaye, toh hum niche 'query' try karenge
                 throw new Error(`HTTP error! status: ${res.status}`);
             }
 
             const data = await res.json();
 
-            // Validate backend response
             if (data && data.answer) {
                 const botMessage = { id: Date.now() + 1, text: data.answer, sender: 'bot' };
                 setMessages(prevMessages => [...prevMessages, botMessage]);
@@ -61,7 +63,7 @@ const Chatbot = () => {
             console.error("Failed to fetch or process chat response:", err);
             const errorMessage = { 
                 id: Date.now() + 1, 
-                text: 'Sorry, I encountered an error. Please check your connection or try again.', 
+                text: 'Sorry, I encountered an error. Please try again.', 
                 sender: 'bot' 
             };
             setMessages(prevMessages => [...prevMessages, errorMessage]);
