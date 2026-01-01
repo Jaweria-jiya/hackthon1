@@ -11,7 +11,6 @@ const Chatbot = () => {
     const chatBodyRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        // Scroll to the bottom of the chat body when messages change
         if (chatBodyRef.current) {
             chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
         }
@@ -25,43 +24,46 @@ const Chatbot = () => {
         e.preventDefault();
         if (inputValue.trim() === '' || isLoading) return;
 
-        const userMessage = { id: Date.now(), text: inputValue, sender: 'user' };
+        const currentInput = inputValue; // User ka message save kar liya
+        const userMessage = { id: Date.now(), text: currentInput, sender: 'user' };
+        
         setMessages(prevMessages => [...prevMessages, userMessage]);
         setInputValue('');
         setIsLoading(true);
 
         try {
-            // ✅ Updated fetch for production using environment variable
-          const backendURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+            // ✅ Fix 1: Direct Production URL use kiya (Hugging Face)
+            // Aap Vercel settings mein NEXT_PUBLIC_API_BASE_URL ko ye URL bhi de sakte hain
+            const backendURL = "https://jaw-eria-deploy-backend.hf.space";
 
-          const res = await fetch(`${backendURL}/api/rag/query`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query_text: inputValue }),
-        });
+            // ✅ Fix 2: 'query_text' ko badal kar 'query' kar diya (Backend yahi mang raha hai)
+            const res = await fetch(`${backendURL}/api/rag/query`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: currentInput }), 
+            });
 
             if (!res.ok) {
-                // Handle HTTP errors like 500, 404 etc.
                 throw new Error(`HTTP error! status: ${res.status}`);
             }
 
             const data = await res.json();
 
-            // Optional: log answer for debugging
-            console.log(data.answer);
-
-            // Validate the response shape
-            if (!data || typeof data.answer !== 'string') {
+            // Validate backend response
+            if (data && data.answer) {
+                const botMessage = { id: Date.now() + 1, text: data.answer, sender: 'bot' };
+                setMessages(prevMessages => [...prevMessages, botMessage]);
+            } else {
                 throw new Error("Invalid backend response shape");
             }
-            
-            // Use the correct 'data.answer' to create the bot message
-            const botMessage = { id: Date.now() + 1, text: data.answer, sender: 'bot' };
-            setMessages(prevMessages => [...prevMessages, botMessage]);
 
         } catch (err) {
             console.error("Failed to fetch or process chat response:", err);
-            const errorMessage = { id: Date.now() + 1, text: 'Sorry, I encountered an error. Please try again.', sender: 'bot' };
+            const errorMessage = { 
+                id: Date.now() + 1, 
+                text: 'Sorry, I encountered an error. Please check your connection or try again.', 
+                sender: 'bot' 
+            };
             setMessages(prevMessages => [...prevMessages, errorMessage]);
         } finally {
             setIsLoading(false);
