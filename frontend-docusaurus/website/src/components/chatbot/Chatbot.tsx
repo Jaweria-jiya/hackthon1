@@ -32,15 +32,13 @@ const Chatbot = () => {
 
         try {
             // ✅ Updated fetch for production using environment variable
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/rag/query`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    query_text: inputValue,
-                }),
-            });
+          const backendURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+
+          const res = await fetch(`${backendURL}/api/rag/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query_text: inputValue }),
+        });
 
             if (!res.ok) {
                 // Handle HTTP errors like 500, 404 etc.
